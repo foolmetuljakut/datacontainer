@@ -1,0 +1,15 @@
+{
+    "mainapp": {
+        "target": {
+            "name": "datacontainer",
+            "opts": "-fdiagnostics-color=always -Wall -Werror -g -Wfatal-errors"
+        },
+        "files": [
+            {
+                "name": "datacontainer.cpp",
+                "hash": "bfbdbd026bde4953f5289674f2ee3c32"
+            }
+        ]
+    },
+    "projects": ""
+}

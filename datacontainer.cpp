@@ -13,6 +13,7 @@ public:
     typedef std::variant<unsigned, std::string> keytype;
 private:
     dctype container;
+    bool isnumber(const std::string s) { return s.find_first_not_of( "0123456789" ) == std::string::npos; }
 
 public:
     DataContainer(std::string value) : container(value) {}
@@ -25,13 +26,11 @@ public:
     }
     DataContainer(std::initializer_list<DataContainer> list) {
         std::vector<DataContainer> dc;
-        dc.reserve(list.size());
         for(auto& s : list)
-            dc.emplace_back(DataContainer(s));
+            dc.push_back(s);
         container = std::move(dc);
     }
     DataContainer() : container(std::map<std::string, DataContainer>()) {}
-    bool isnumber(const std::string s) { return s.find_first_not_of( "0123456789" ) == std::string::npos; }
     std::string access(std::string ikey = "", std::string separator = ".") {
         // ikey can be of the form 
         // "path/to/0/variable"
@@ -140,5 +139,10 @@ int main(int argc, char **argv) {
     listtest = DataContainer({s1, s2});
     std::cout << listtest << std::endl;
 
+    DataContainer containingSample1, containingSample2;
+    containingSample1.set("woodadooda", s1);
+    containingSample2.set("woodlenoodle", s2);
+    listtest = DataContainer({containingSample1, containingSample2});
+    std::cout << listtest << std::endl;
     return 0;
 }

@@ -144,5 +144,8 @@ int main(int argc, char **argv) {
     containingSample2.set("woodlenoodle", s2);
     listtest = DataContainer({containingSample1, containingSample2});
     std::cout << listtest << std::endl;
+
+    std::cout << "whats behind 1.woodlenoodle? " << listtest.access("1.woodlenoodle") << std::endl;
+
     return 0;
 }

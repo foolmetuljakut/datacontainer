@@ -132,6 +132,13 @@ void main0() {
 
 int main(int argc, char **argv) {
 
+    /*todo
+        access method for setting values
+        json export
+        json import
+    */
+
+
     DataContainer listtest({"1", "2", "3", "4"});
     std::cout << listtest << std::endl;
 

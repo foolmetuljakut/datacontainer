@@ -23,6 +23,13 @@ public:
             dc.emplace_back(DataContainer(s));
         container = std::move(dc);
     }
+    DataContainer(std::initializer_list<DataContainer> list) {
+        std::vector<DataContainer> dc;
+        dc.reserve(list.size());
+        for(auto& s : list)
+            dc.emplace_back(DataContainer(s));
+        container = std::move(dc);
+    }
     DataContainer() : container(std::map<std::string, DataContainer>()) {}
     bool isnumber(const std::string s) { return s.find_first_not_of( "0123456789" ) == std::string::npos; }
     std::string access(std::string ikey = "", std::string separator = ".") {
@@ -58,6 +65,8 @@ public:
                 throw "";
             if(rkey.size() == 0)
                 throw "not implemented: special case";
+            if(!isnumber(nkey))
+                throw "what do you expect me to do, access a list using some kind of string?";
             return std::get<list>(container)[(unsigned)atoi(nkey.c_str())].access(rkey, separator); 
         } else { //dict
             dict d = std::get<dict>(container);
@@ -104,7 +113,8 @@ std::ostream& operator<<(std::ostream& out, DataContainer& dc) {
         }
 }
 
-int main(int argc, char **argv) {
+// testing value and dict access
+void main0() {
 
     DataContainer sample("value");
     std::cout << "sample with just value:\n" << sample << std::endl << "-----------------" << std::endl;
@@ -119,5 +129,16 @@ int main(int argc, char **argv) {
     std::cout << "sample with sub sample:\n"  << containingSample << std::endl << "-----------------" << std::endl;
 
     std::cout << "whats under the first key \"outerkey.key2\":\n"  << containingSample.access("outerkey.key2") << std::endl << "-----------------" << std::endl;
+}
+
+int main(int argc, char **argv) {
+
+    DataContainer listtest({"1", "2", "3", "4"});
+    std::cout << listtest << std::endl;
+
+    DataContainer s1("value1"), s2("value2");
+    listtest = DataContainer({s1, s2});
+    std::cout << listtest << std::endl;
+
     return 0;
 }

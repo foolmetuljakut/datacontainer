@@ -10,14 +10,27 @@ public:
     typedef std::vector<DataContainer> list;
     typedef std::map<data, DataContainer> dict;
     typedef std::variant<data, list, dict> dctype;
-    typedef std::variant<unsigned, std::string> keytype;
+    typedef std::variant<size_t, std::string> keytype;
 private:
     dctype container;
     bool isnumber(const std::string s) { return s.find_first_not_of( "0123456789" ) == std::string::npos; }
 
 public:
-    DataContainer(std::string value) : container(value) {}
-    DataContainer(std::initializer_list<std::string> list) {
+    DataContainer(size_t containerindex = 2) {
+        switch(containerindex) {
+            case 0:
+                container = data();
+                return;
+            case 1:
+                container = list();
+                return;
+            case 2:
+                container = dict();
+                return;
+        }
+    }
+    DataContainer(data value) : container(value) {}
+    DataContainer(std::initializer_list<data> list) {
         std::vector<DataContainer> dc;
         dc.reserve(list.size());
         for(auto& s : list)
@@ -30,7 +43,7 @@ public:
             dc.push_back(s);
         container = std::move(dc);
     }
-    DataContainer() : container(std::map<std::string, DataContainer>()) {}
+
     std::string access(std::string ikey = "", std::string separator = ".") {
         // ikey can be of the form 
         // "path/to/0/variable"
@@ -47,9 +60,9 @@ public:
         // accessor is numeric => lists
         // accessor is string => dict
 
-        unsigned i = ikey.find_first_of(separator);
+        size_t i = ikey.find_first_of(separator);
         std::string nkey, rkey;
-        if(i < (unsigned)(-1)) {
+        if(i < (size_t)(-1)) {
             nkey = ikey.substr(0, i);
             rkey = ikey.substr(i + 1);
         }
@@ -66,7 +79,7 @@ public:
                 throw "not implemented: special case";
             if(!isnumber(nkey))
                 throw "what do you expect me to do, access a list using some kind of string?";
-            return std::get<list>(container)[(unsigned)atoi(nkey.c_str())].access(rkey, separator); 
+            return std::get<list>(container)[(size_t)atoi(nkey.c_str())].access(rkey, separator); 
         } else { //dict
             dict d = std::get<dict>(container);
             if(d.find(nkey) == d.end())
@@ -77,13 +90,44 @@ public:
                     throw "accessed element is not a value. key is to short to go all the way down.";
                 return std::get<data>(lastc);
             }
-            return std::get<dict>(container)[nkey].access(rkey, separator); 
+            return d[nkey].access(rkey, separator); 
         } 
     }
 
-    void set(std::string key, std::string value) {
-        DataContainer v(value);
-        set(key, v);
+    void set(std::string key, std::string value, std::string separator = ".") {
+        size_t i = key.find_first_of(separator);
+        std::string nkey, rkey;
+        if(i < (size_t)(-1)) {
+            nkey = key.substr(0, i);
+            rkey = key.substr(i + 1);
+        }
+        else { // no separator => last element before value
+            nkey = key;
+            rkey = "\0";
+        }
+
+        if(!rkey.compare("\0")) {
+            DataContainer v(value);
+            set(nkey, v); 
+        }
+        else {
+            if(container.index() == 0) {
+
+            }
+            else if(container.index() == 1) { 
+                if(!isnumber(nkey))
+                    throw "what do you expect me to do, access a list using some kind of string?";
+                list l = std::get<list>(container);
+                std::get<list>(container)[(size_t)atoi(nkey.c_str())].set(rkey, value, separator);
+            }
+            if(container.index() == 2) {
+                dict d = std::get<dict>(container);
+                if(d.find(nkey) == d.end())
+                    d[nkey] = DataContainer();
+                d[nkey].set(rkey, value, separator);
+                container = d;
+            }
+        }
     }
     void set(std::string key, DataContainer& value) {
         if(container.index() == 2)
@@ -130,14 +174,7 @@ void main0() {
     std::cout << "whats under the first key \"outerkey.key2\":\n"  << containingSample.access("outerkey.key2") << std::endl << "-----------------" << std::endl;
 }
 
-int main(int argc, char **argv) {
-
-    /*todo
-        access method for setting values
-        json export
-        json import
-    */
-
+void main1() {
 
     DataContainer listtest({"1", "2", "3", "4"});
     std::cout << listtest << std::endl;
@@ -153,6 +190,26 @@ int main(int argc, char **argv) {
     std::cout << listtest << std::endl;
 
     std::cout << "whats behind 1.woodlenoodle? " << listtest.access("1.woodlenoodle") << std::endl;
+}
 
+int main(int argc, char **argv) {
+
+    /*todo
+        access method for setting values
+        json export
+        json import
+    */
+
+    DataContainer sample;
+    sample.set("lol.rofl", "val");
+    std::cout << sample << std::endl;
+
+    DataContainer sample;
+    sample.set("lol.3", "rofl");
+    std::cout << sample << std::endl;
+
+    DataContainer sample(1);
+    sample.set("3.lol", "rofl");
+    std::cout << sample << std::endl;
     return 0;
 }

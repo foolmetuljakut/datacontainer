@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include <variant>
 #include <vector>
 #include <map>
@@ -112,7 +113,7 @@ public:
         }
         else {
             if(container.index() == 0) {
-
+                throw "reached a value, can't follow path.";
             }
             else if(container.index() == 1) { 
                 if(!isnumber(nkey))
@@ -133,27 +134,47 @@ public:
         if(container.index() == 2)
             std::get<dict>(container)[key] = value;
     }
+    
+    std::string json(int level = 1, std::string indent = "    ") { 
+        std::stringstream ss;
+        if(container.index() == 0) {
+            ss << "\"" << std::get<data>(container) << "\"";
+        }
+        else if (container.index() == 1)
+        {
+            ss << "[\n";
+            size_t oi = 0;
+            auto d = std::get<list>(container);
+            for(auto& o : d) {
+                for(int i{0}; i < level; i++)
+                    ss << indent;
+                ss << o.json(level + 1) << ( oi++ < d.size() -1 ? ", " : "") << "\n";
+            } 
+            for(int i{0}; i < level-1; i++)
+                ss << indent; 
+            ss << "]\n";
+        }
+        else if(container.index() == 2) {
+            ss << "{\n";
+            size_t oi = 0;
+            auto d = std::get<dict>(container);
+            for(auto& o : d) {
+                for(int i{0}; i < level; i++)
+                    ss << indent;
+                ss << "\"" << o.first << "\"" << ": " << o.second.json(level + 1) << 
+                    ( oi++ < d.size() -1 ? ", " : "") << std::endl;
+            }
+            for(int i{0}; i < level-1; i++)
+                ss << indent; 
+            ss << "}";
+        }
+        return ss.str();
+    }
     friend std::ostream& operator<<(std::ostream& out, DataContainer& dc);
 };
 
 std::ostream& operator<<(std::ostream& out, DataContainer& dc) {
-    auto container = dc.container;
-    switch(container.index()) {
-        case 0: // std::string
-            return out << std::get<DataContainer::data>(container);
-        case 1: // std::vector
-            out << "[\n";
-            for(auto& item : std::get<DataContainer::list>(container))
-                out << item << std::endl;
-            return out << "]";
-        case 2: // std::map
-            out << "{\n";
-            for(auto& kvpair : std::get<DataContainer::dict>(container))
-                out << kvpair.first << ": " << kvpair.second << std::endl;
-            return out << "}";
-        default: // ???
-            throw "the fuck did you even do?!?";
-        }
+    return out << dc.json();
 }
 
 // testing value and dict access
@@ -192,24 +213,30 @@ void main1() {
     std::cout << "whats behind 1.woodlenoodle? " << listtest.access("1.woodlenoodle") << std::endl;
 }
 
-int main(int argc, char **argv) {
-
-    /*todo
-        access method for setting values
-        json export
-        json import
-    */
+void main2() {
 
     DataContainer sample;
     sample.set("lol.rofl", "val");
     std::cout << sample << std::endl;
 
-    DataContainer sample;
+    sample = DataContainer();
     sample.set("lol.3", "rofl");
     std::cout << sample << std::endl;
 
-    DataContainer sample(1);
+    sample = DataContainer(1);
     sample.set("3.lol", "rofl");
     std::cout << sample << std::endl;
+}
+
+int main(int argc, char **argv) {
+
+    /*todo
+        access method for setting values
+        json import
+    */
+    
+    main0();
+    main1();
+
     return 0;
 }

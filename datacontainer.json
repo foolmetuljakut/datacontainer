@@ -4,12 +4,14 @@
             "name": "datacontainer",
             "opts": "-fdiagnostics-color=always -Wall -Werror -g -Wfatal-errors"
         },
+        "version": "1.0.0.1",
+        "unittestsymbol": "UT",
+        "unittestlistmax": "3",
         "files": [
             {
                 "name": "datacontainer.cpp",
-                "hash": "0e2ebe3d27e6ef864ec8df9360a8eb84"
+                "hash": "ddc568a6a990eb161480d220a3a27aa2"
             }
         ]
-    },
-    "projects": ""
+    }
 }

@@ -5,6 +5,11 @@
 #include <map>
 #include <exception>
 
+#include <boost/asio.hpp>
+#include <string>
+using namespace boost::asio;
+using ip::tcp;
+
 class DataContainer {
 public:
     typedef std::string data;
@@ -240,13 +245,56 @@ void main2() {
     std::cout << sample << std::endl;
 }
 
-int main(int argc, char **argv) {
-
     /*todo
         json import
     */
-    
+
+std::string read(tcp::socket& socket) {
+    boost::asio::streambuf buf;
+    boost::asio::read_until(socket, buf, "\0");
+    std::string data = boost::asio::buffer_cast<const char*>(buf.data());
+    return data;
+}
+
+void send(tcp::socket& socket, const std::string& message) {
+    const auto msg = message + "\0";
+    boost::asio::write(socket, boost::asio::buffer(msg));
+}
+
+void main3(int argc, char **argv) {
+
+    if(std::string(argv[1]) == "send") {
+        boost::asio::io_service service;
+        tcp::socket socket(service);
+        socket.connect(tcp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 1234));
+        
+        std::string msg(argv[2]);
+        send(socket, msg);
+    }
+    else if(std::string(argv[1]) == "receive") {
+        boost::asio::io_service service;
+        tcp::acceptor acceptor(service, tcp::endpoint(tcp::v4(), 1234));
+        tcp::socket socket(service);
+        acceptor.accept(socket);
+        std::cout << "received: >" << read(socket) << "<" << std::endl;
+    }
+}
+
+
+int main(int argc, char **argv) {
+
+#ifdef MAIN
+    main3(argc, argv);
+#endif
+#ifdef UT1
+    main0();
+#endif
+#ifdef UT2
+    main1();
+#endif
+#ifdef UT3
     main2();
+#endif
 
     return 0;
 }
